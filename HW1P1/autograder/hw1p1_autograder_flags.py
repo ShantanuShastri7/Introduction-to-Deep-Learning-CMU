@@ -22,14 +22,14 @@ DEBUG_AND_GRADE_MLP4_flag = True
 
 # flags for loss.py
 
-DEBUG_AND_GRADE_MSELOSS_flag = False
-DEBUG_AND_GRADE_CROSSENTROPYLOSS_flag = False
+DEBUG_AND_GRADE_MSELOSS_flag = True
+DEBUG_AND_GRADE_CROSSENTROPYLOSS_flag = True
 
 # flags for optim.py
 
-DEBUG_AND_GRADE_SGD_flag = False
-DEBUG_AND_GRADE_SGD_momentum_flag = False
+DEBUG_AND_GRADE_SGD_flag = True
+DEBUG_AND_GRADE_SGD_momentum_flag = True
 
 # flags for batchnorm.py
 
-DEBUG_AND_GRADE_BATCHNORM_flag = False
+DEBUG_AND_GRADE_BATCHNORM_flag = True
