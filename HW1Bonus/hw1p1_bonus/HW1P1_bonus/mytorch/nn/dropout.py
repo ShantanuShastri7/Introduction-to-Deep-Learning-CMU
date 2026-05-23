@@ -6,6 +6,7 @@ import numpy as np
 class Dropout(object):
     def __init__(self, p=0.5):
         self.p = p
+        self.keep_probab = 1-p
 
     def __call__(self, x):
         return self.forward(x)
@@ -13,16 +14,14 @@ class Dropout(object):
     def forward(self, x, train=True):
 
         if train:
-            # TODO: Generate mask and apply to x
+            self.mask = np.random.binomial(1, self.keep_probab, size=x.shape)
+            self.mask = self.mask/self.keep_probab
 
-            raise NotImplementedError("Dropout Forward (Train) Not Implemented")
+            return x*self.mask
             
         else:
-            # TODO: Return x as is
-
-            raise NotImplementedError("Dropout Forward (Inference) Not Implemented")
+            return x
 		
     def backward(self, delta):
-        # TODO: Multiply mask with delta and return
-
-        raise NotImplementedError("Dropout Backward Not Implemented")
+        
+        return self.mask*delta
