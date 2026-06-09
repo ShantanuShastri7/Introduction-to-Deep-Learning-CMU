@@ -9,8 +9,8 @@ DEBUG_AND_GRADE_UPSAMPLING_2D_flag = True
 
 # flags for Conv1d.py
 
-DEBUG_AND_GRADE_CONV1D_STRIDE1_flag = False
-DEBUG_AND_GRADE_CONV1D_flag = False
+DEBUG_AND_GRADE_CONV1D_STRIDE1_flag = True
+DEBUG_AND_GRADE_CONV1D_flag = True
 
 # flags for Conv2d.py
 

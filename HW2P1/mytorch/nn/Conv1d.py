@@ -35,9 +35,18 @@ class Conv1d_stride1():
         """
         self.A = A
 
-        Z = None  # TODO
+        batch_size, in_channels, input_size = A.shape
+        output_size = input_size - self.kernel_size + 1
 
-        return NotImplemented
+        Z = np.zeros((batch_size, self.out_channels, output_size))
+
+        for i in range(output_size):
+            patch = A[:, :, i : i + self.kernel_size]
+            Z[:, :, i] = np.tensordot(patch, self.W, axes=([1, 2], [1, 2]))
+
+        Z += self.b.reshape(1, -1, 1)
+
+        return Z
 
     def backward(self, dLdZ):
         """
@@ -46,11 +55,48 @@ class Conv1d_stride1():
         Return:
             dLdA (np.array): (batch_size, in_channels, input_size)
         """
-        self.dLdW = None  # TODO
-        self.dLdb = None  # TODO
-        dLdA = None  # TODO
+        batch_size, out_channels, output_size = dLdZ.shape
+        input_size = output_size + self.kernel_size - 1
 
-        return NotImplemented
+        pad_size = self.kernel_size - 1
+        padded_dLdZ = np.pad(
+            dLdZ, 
+            pad_width=((0, 0), (0, 0), (pad_size, pad_size)), 
+            mode='constant', 
+            constant_values=0
+        )
+        
+        flipped_w = np.flip(self.W, axis=2)
+
+        self.dLdW = np.zeros((self.out_channels, self.in_channels, self.kernel_size))
+        
+        self.dLdb = np.sum(dLdZ, axis=(0, 2))
+        
+        dLdA = np.zeros((batch_size, self.in_channels, input_size))  
+
+        # ---------------------------------------------------------
+        # Calculate dLdA
+        # ---------------------------------------------------------
+        for i in range(input_size):
+            patch = padded_dLdZ[:, :, i : i + self.kernel_size]
+            
+            # axes=([1, 2], [0, 2]) sums over out_channels and kernel_size
+            # Leaves behind: (batch_size, in_channels)
+            dLdA[:, :, i] = np.tensordot(patch, flipped_w, axes=([1, 2], [0, 2]))
+
+        # ---------------------------------------------------------
+        # Calculate dLdW
+        # ---------------------------------------------------------
+        for i in range(self.kernel_size):
+            # FIX 4a: Slice length must match dLdZ's sequence length (output_size)
+            patch = self.A[:, :, i : i + output_size]
+            
+            # dLdZ shape: (N, Cout, Lout) -- we use axis 0 and 2
+            # patch shape: (N, Cin, Lout) -- we use axis 0 and 2
+            # Left over: Cout from dLdZ, Cin from patch -> (Cout, Cin)
+            self.dLdW[:, :, i] = np.tensordot(dLdZ, patch, axes=([0, 2], [0, 2]))
+
+        return dLdA
 
 
 class Conv1d():
