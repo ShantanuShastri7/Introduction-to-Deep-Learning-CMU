@@ -106,8 +106,8 @@ class Conv1d():
         self.pad = padding
         
         # Initialize Conv1d() and Downsample1d() isntance
-        self.conv1d_stride1 = None  # TODO
-        self.downsample1d = None  # TODO
+        self.conv1d_stride1 = Conv1d_stride1(in_channels, out_channels, kernel_size, weight_init_fn, bias_init_fn)
+        self.downsample1d = Downsample1d(padding)
 
     def forward(self, A):
         """
@@ -117,15 +117,21 @@ class Conv1d():
             Z (np.array): (batch_size, out_channels, output_size)
         """
         # Pad the input appropriately using np.pad() function
-        # TODO
+        if self.pad > 0:
+            A = np.pad(
+                A, 
+                pad_width=((0, 0), (0, 0), (self.pad, self.pad)), 
+                mode='constant', 
+                constant_values=0
+            )
 
         # Call Conv1d_stride1
-        # TODO
+        Z_without_resampling = self.conv1d_stride1.forward(A)
 
         # downsample
-        Z = None  # TODO
+        Z = self.downsample1d.forward(Z_without_resampling)
 
-        return NotImplemented
+        return Z
 
     def backward(self, dLdZ):
         """
@@ -135,12 +141,13 @@ class Conv1d():
             dLdA (np.array): (batch_size, in_channels, input_size)
         """
         # Call downsample1d backward
-        # TODO
+        Z_without_resampling = self.downsample1d.backward(dLdZ)
 
         # Call Conv1d_stride1 backward
-        dLdA = None  # TODO
+        dLdA = self.conv1d_stride1.backward(Z_without_resampling)
 
         # Unpad the gradient
-        # TODO
+        if self.pad > 0:
+            dLdA = dLdA[:, :, self.pad : -self.pad]
 
-        return NotImplemented
+        return dLdA
