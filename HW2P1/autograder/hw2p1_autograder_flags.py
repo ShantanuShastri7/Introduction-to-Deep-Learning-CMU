@@ -19,8 +19,8 @@ DEBUG_AND_GRADE_CONV2D_flag = True
 
 # flags for ConvTranspose.py
 
-DEBUG_AND_GRADE_CONVTRANSPOSE1D_flag = False
-DEBUG_AND_GRADE_CONVTRANSPOSE2D_flag = False
+DEBUG_AND_GRADE_CONVTRANSPOSE1D_flag = True
+DEBUG_AND_GRADE_CONVTRANSPOSE2D_flag = True
 
 # flags for pool.py
 

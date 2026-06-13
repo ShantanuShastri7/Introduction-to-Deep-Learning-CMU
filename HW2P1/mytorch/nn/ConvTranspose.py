@@ -9,10 +9,11 @@ class ConvTranspose1d():
         # Do not modify this method
         self.upsampling_factor = upsampling_factor
 
-        # Initialize Conv1d stride 1 and upsample1d isntance
-        # TODO
-        self.upsample1d = None  # TODO
-        self.conv1d_stride1 = None  # TODO
+        # Initialize Conv1d stride 1 and upsample1d instance
+        self.upsample1d = Upsample1d(upsampling_factor)
+        self.conv1d_stride1 = Conv1d_stride1(
+            in_channels, out_channels, kernel_size, weight_init_fn, bias_init_fn
+        )
 
     def forward(self, A):
         """
@@ -21,14 +22,13 @@ class ConvTranspose1d():
         Return:
             Z (np.array): (batch_size, out_channels, output_size)
         """
-        # TODO
-        # upsample
-        A_upsampled = None  # TODO
+        # 1. Upsample the input (inserts zeros between elements)
+        A_upsampled = self.upsample1d.forward(A)
 
-        # Call Conv1d_stride1()
-        Z = None  # TODO
+        # 2. Call Conv1d_stride1 on the upsampled data
+        Z = self.conv1d_stride1.forward(A_upsampled)
 
-        return NotImplemented
+        return Z
 
     def backward(self, dLdZ):
         """
@@ -37,14 +37,15 @@ class ConvTranspose1d():
         Return:
             dLdA (np.array): (batch_size, in_channels, input_size)
         """
-        # TODO
+        # Call backward in the reverse order of the forward pass
+        
+        # 1. Propagate gradient through the convolution
+        delta_out = self.conv1d_stride1.backward(dLdZ)
 
-        # Call backward in the correct order
-        delta_out = None  # TODO
+        # 2. Propagate gradient through the upsampler
+        dLdA = self.upsample1d.backward(delta_out)
 
-        dLdA = None  # TODO
-
-        return NotImplemented
+        return dLdA
 
 
 class ConvTranspose2d():
@@ -52,35 +53,40 @@ class ConvTranspose2d():
         # Do not modify this method
         self.upsampling_factor = upsampling_factor
 
-        # Initialize Conv2d() isntance
-        self.conv2d_stride1 = None  # TODO
-        self.upsample2d = None  # TODO
+        # Initialize Conv2d_stride1 and upsample2d instance
+        self.upsample2d = Upsample2d(upsampling_factor)
+        self.conv2d_stride1 = Conv2d_stride1(
+            in_channels, out_channels, kernel_size, weight_init_fn, bias_init_fn
+        )
 
     def forward(self, A):
         """
         Argument:
-            A (np.array): (batch_size, in_channels, input_size)
+            A (np.array): (batch_size, in_channels, input_height, input_width)
         Return:
-            Z (np.array): (batch_size, out_channels, output_size)
+            Z (np.array): (batch_size, out_channels, output_height, output_width)
         """
-        # upsample
-        A_upsampled = None  # TODO
+        # 1. Upsample the spatial dimensions
+        A_upsampled = self.upsample2d.forward(A)
 
-        # Call Conv2d_stride1()
-        Z = None  # TODO
+        # 2. Apply the convolution
+        Z = self.conv2d_stride1.forward(A_upsampled)
 
-        return NotImplemented
+        return Z
 
     def backward(self, dLdZ):
         """
         Argument:
-            dLdZ (np.array): (batch_size, out_channels, output_size)
+            dLdZ (np.array): (batch_size, out_channels, output_height, output_width)
         Return:
-            dLdA (np.array): (batch_size, in_channels, input_size)
+            dLdA (np.array): (batch_size, in_channels, input_height, input_width)
         """
-        # Call backward in correct order
-        delta_out = None  # TODO
+        # Call backward in the reverse order of the forward pass
+        
+        # 1. Propagate gradient through the convolution
+        delta_out = self.conv2d_stride1.backward(dLdZ)
 
-        dLdA = None  # TODO
+        # 2. Propagate gradient through the upsampler
+        dLdA = self.upsample2d.backward(delta_out)
 
         return dLdA
