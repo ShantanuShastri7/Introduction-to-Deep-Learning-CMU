@@ -9,7 +9,7 @@ class Flatten():
             Z (np.array): (batch_size, in_channels * in width)
         """
         self.batch_size, self.in_channels, self.in_width = A.shape
-        Z = A.reshape(self.batch_size, A.in_channels*A.in_width)  
+        Z = A.reshape(self.batch_size, self.in_channels*self.in_width)  
         return Z
 
     def backward(self, dLdZ):
