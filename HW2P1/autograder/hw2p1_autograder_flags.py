@@ -14,8 +14,8 @@ DEBUG_AND_GRADE_CONV1D_flag = True
 
 # flags for Conv2d.py
 
-DEBUG_AND_GRADE_CONV2D_STRIDE1_flag = False
-DEBUG_AND_GRADE_CONV2D_flag = False
+DEBUG_AND_GRADE_CONV2D_STRIDE1_flag = True
+DEBUG_AND_GRADE_CONV2D_flag = True
 
 # flags for ConvTranspose.py
 
