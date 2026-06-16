@@ -40,8 +40,11 @@ class Downsample1d():
             Z (np.array): (batch_size, in_channels, output_width)
         """
         self.Win = A.shape[2]
-        Z = A[:, :, ::self.downsampling_factor]  # TODO
-        return Z
+        if self.downsampling_factor>0:
+            Z = A[:, :, ::self.downsampling_factor] 
+            return Z
+        
+        return A
 
     def backward(self, dLdZ):
         """

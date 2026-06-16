@@ -41,6 +41,7 @@ class Conv1d_stride1():
         Z = np.zeros((batch_size, self.out_channels, output_size))
 
         for i in range(output_size):
+            #batchSize, inChannel, KernelSize
             patch = A[:, :, i : i + self.kernel_size]
             Z[:, :, i] = np.tensordot(patch, self.W, axes=([1, 2], [1, 2]))
 
@@ -107,7 +108,7 @@ class Conv1d():
         
         # Initialize Conv1d() and Downsample1d() isntance
         self.conv1d_stride1 = Conv1d_stride1(in_channels, out_channels, kernel_size, weight_init_fn, bias_init_fn)
-        self.downsample1d = Downsample1d(padding)
+        self.downsample1d = Downsample1d(stride)
 
     def forward(self, A):
         """
