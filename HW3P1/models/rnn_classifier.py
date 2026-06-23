@@ -15,12 +15,12 @@ class RNNPhonemeClassifier(object):
         self.num_layers = num_layers
 
         # TODO: Understand then uncomment this code :)
-        # self.rnn = [
-        #     RNNCell(input_size, hidden_size) if i == 0 
-        #         else RNNCell(hidden_size, hidden_size)
-        #             for i in range(num_layers)
-        # ]
-        # self.output_layer = Linear(hidden_size, output_size)
+        self.rnn = [
+            RNNCell(input_size, hidden_size) if i == 0 
+                else RNNCell(hidden_size, hidden_size)
+                    for i in range(num_layers)
+        ]
+        self.output_layer = Linear(hidden_size, output_size)
 
         # store hidden states at each time step, [(seq_len+1) * (num_layers, batch_size, hidden_size)]
         self.hiddens = []
@@ -75,21 +75,27 @@ class RNNPhonemeClassifier(object):
         self.hiddens.append(hidden.copy())
         logits = None
 
-        ### Add your code here --->
-        # (More specific pseudocode may exist in lecture slides)
-        # Iterate through the sequence
-        #   Iterate over the length of your self.rnn (through the layers)
-        #       Run the rnn cell with the correct parameters and update
-        #       the parameters as needed. Update hidden.
-        #   Similar to above, append a copy of the current hidden array to the hiddens list
+        for t in range(seq_len):
+            input_t = x[:, t, :]  # The input at this time step
         
-        # TODO
+            for layer_idx in range(self.num_layers):
+                h_prev = hidden[layer_idx]
+                
+                # Pass input and hidden to the cell
+                # The cell returns the new hidden state (which is also the output)
+                new_h = self.rnn[layer_idx].forward(input_t, h_prev)
+                
+                # Update the hidden state tracker and the input for the next layer
+                hidden[layer_idx] = new_h
+                input_t = new_h 
+            
+            # After passing through all layers, save the final hidden states for this time step
+            self.hiddens.append(hidden.copy())
 
-        # Get the outputs from the last time step using the linear layer and return it
-        # <--------------------------
-        
-        # return logits 
-        raise NotImplementedError
+        final_state = self.hiddens[-1][self.num_layers - 1]
+        logits = self.output_layer.forward(final_state)
+
+        return logits
 
     def backward(self, delta):
         """RNN Back Propagation Through Time (BPTT).
