@@ -98,52 +98,33 @@ class RNNPhonemeClassifier(object):
         return logits
 
     def backward(self, delta):
-        """RNN Back Propagation Through Time (BPTT).
-
-        Input
-        ------
-        delta: (batch_size, hidden_size)
-
-        gradient: dY(seq_len-1)
-                gradient w.r.t. the last time step output.
-
-        Returns
-        -------
-        dh_0: (num_layers, batch_size, hidden_size)
-
-        gradient w.r.t. the initial hidden states
-
-        """
-        # Initilizations
         batch_size, seq_len = self.x.shape[0], self.x.shape[1]
+        
+        # Initialize dh. This will act as our running gradient matrix.
         dh = np.zeros((self.num_layers, batch_size, self.hidden_size), dtype=float)
+        
+        # The gradient from the output layer enters at the final time step
+        # at the uppermost layer (index -1)
         dh[-1] = self.output_layer.backward(delta)
 
-        """
+        for t in range(seq_len - 1, -1, -1):
+            for l in range(self.num_layers - 1, -1, -1):
+                
+                # Extract the required forward states
+                h_t = self.hiddens[t+1][l]
+                h_prev_t = self.hiddens[t][l]
+                h_prev_l = self.x[:, t, :] if l == 0 else self.hiddens[t+1][l-1]
+                
+                # Get gradients from the current cell
+                dx, dh_prev = self.rnn[l].backward(dh[l], h_t, h_prev_l, h_prev_t)
+                
+                # Update dh[l] with the temporal gradient (flowing to t-1)
+                dh[l] = dh_prev
+                
+                # Add dx to the gradient for the layer below (flowing to l-1)
+                if l != 0:
+                    dh[l-1] += dx
 
-        * Notes:
-        * More specific pseudocode may exist in lecture slides and a visualization
-          exists in the writeup.
-        * WATCH out for off by 1 errors due to implementation decisions.
-
-        Pseudocode:
-        * Iterate in reverse order of time (from seq_len-1 to 0)
-            * Iterate in reverse order of layers (from num_layers-1 to 0)
-                * Get h_prev_l either from hiddens or x depending on the layer
-                    (Recall that hiddens has an extra initial hidden state)
-                * Use dh and hiddens to get the other parameters for the backward method
-                    (Recall that hiddens has an extra initial hidden state)
-                * Update dh with the new dh from the backward pass of the rnn cell
-                * If you aren't at the first layer, you will want to add
-                  dx to the gradient from l-1th layer.
-
-        * Normalize dh by batch_size since initial hidden states are also treated
-          as parameters of the network (divide by batch size)
-
-        Tip: You may or may not require += at places. Think about it and code
-
-        """
-        # TODO
-
-        # return dh / batch_size
-        raise NotImplementedError
+        # After the time loop finishes, dh holds the gradients that reached t=0,
+        # which represents the gradient with respect to the initial hidden states (h_0).
+        return dh / batch_size
