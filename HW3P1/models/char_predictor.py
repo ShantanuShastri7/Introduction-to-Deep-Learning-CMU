@@ -18,10 +18,13 @@ class CharacterPredictor(object):
     def __init__(self, input_dim, hidden_dim, num_classes):
         super(CharacterPredictor, self).__init__()
         """The network consists of a GRU Cell and a linear layer."""
-        self.gru = None # TODO
-        self.projection = None # TODO
-        self.num_classes =  None # TODO
-        self.hidden_dim = None # TODO 
+        self.gru = GRUCell(input_dim, hidden_dim)
+        self.projection = Linear(hidden_dim, num_classes)
+        self.num_classes = num_classes
+        self.hidden_dim = hidden_dim
+        
+        # NOTE: This implies the Linear layer in mytorch holds weights of shape 
+        # (out_features, in_features).
         self.projection.W = np.random.rand(num_classes, hidden_dim)
 
     def init_rnn_weights(
@@ -53,13 +56,18 @@ class CharacterPredictor(object):
         hnext: (hidden_dim)
             hidden state at current time-step.
         """
-        hnext = None # TODO
+        
+        # 1. Step the GRU cell forward to get the new hidden state
+        hnext = self.gru.forward(x, h)
+        
         # self.projection expects input in the form of batch_size * input_dimension
         # Therefore, reshape the input of self.projection as (1,-1)
-        logits = None # TODO
-        # logits = logits.reshape(-1,) # uncomment once code implemented
-        # return logits, hnext
-        raise NotImplementedError
+        
+        # 2. Project the hidden state to vocabulary/class logits
+        logits = self.projection.forward(hnext.reshape(1, -1))
+        
+        logits = logits.reshape(-1,) # uncomment once code implemented
+        return logits, hnext
 
 
 def inference(net, inputs):
@@ -80,6 +88,17 @@ def inference(net, inputs):
     logits: (seq_len, num_classes)
             one per time step of input..
     """
-    # TODO
-    # This code should not take more than 10 lines. 
-    raise NotImplementedError
+    
+    # Initialize the hidden state to zeros with the correct hidden dimension
+    h = np.zeros(net.hidden_dim)
+    seq_len = inputs.shape[0]
+    
+    logits_list = []
+    
+    # Unroll the GRU over the sequence
+    for t in range(seq_len):
+        logits_t, h = net.forward(inputs[t], h)
+        logits_list.append(logits_t)
+        
+    # Stack the logits vertically so the output shape is (seq_len, num_classes)
+    return np.stack(logits_list, axis=0)
